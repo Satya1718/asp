@@ -1,0 +1,379 @@
+% Audio and Speech Signal Analysis in Time and Frequency Domains
+
+% Load the audio signal
+[audioSignal, fs] = audioread('mic_F01_sa2.wav');  % Replace with your audio file
+audioSignal = audioSignal(:, 1);  % Use the first channel if stereo
+
+% Time vector for plotting
+t = (0:length(audioSignal)-1) / fs;
+
+% Plot the waveform in time domain
+figure;
+plot(t, audioSignal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Time Domain Representation of the Audio Signal');
+grid on;
+
+% Compute and plot the frequency spectrum using FFT
+n = length(audioSignal);
+f = (0:n-1)*(fs/n);  % Frequency axis
+Y = fft(audioSignal);
+
+% Plot the single-sided amplitude spectrum
+figure;
+plot(f(1:n/2), abs(Y(1:n/2)));
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Frequency Spectrum of the Audio Signal');
+grid on;
+
+% Spectrogram analysis
+windowSize = 256; % Define window size
+overlap = 200;    % Define overlap samples
+nfft = 512;       % Number of FFT points
+
+figure;
+spectrogram(audioSignal, windowSize, overlap, nfft, fs, 'yaxis');
+title('Spectrogram of the Audio Signal');
+
+% Play the original audio
+disp('Playing the original audio...');
+sound(audioSignal, fs);
+pause(length(audioSignal)/fs + 1);
+
+% Compute and display basic signal properties
+signalDuration = length(audioSignal) / fs;
+signalPower = rms(audioSignal)^2;
+
+disp(['Signal Duration: ', num2str(signalDuration), ' seconds']);
+disp(['Signal Power: ', num2str(signalPower), ' Watts']);
+
+% Apply a band-pass filter to remove noise (example: 300Hz - 3400Hz for speech)
+lowCut = 300; 
+highCut = 3400;
+[b, a] = butter(4, [lowCut, highCut] / (fs / 2), 'bandpass');
+filteredSignal = filtfilt(b, a, audioSignal);
+
+% Plot filtered signal in time domain
+figure;
+plot(t, filteredSignal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Filtered Speech Signal (300Hz - 3400Hz)');
+grid on;
+
+% Play filtered audio
+disp('Playing the filtered audio...');
+sound(filteredSignal, fs);
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Lab Experiment 3 Short time domain analysis of audio and speech Signals
+
+
+
+clear; clc; close all;
+
+% Load the audio signal
+[audioSignal, fs] = audioread('Conference.wav'); % Replace with your audio file
+audioSignal = audioSignal(:, 1); % Use the first channel if stereo
+
+% Time vector for plotting
+t = (0:length(audioSignal)-1) / fs;
+
+% Plot the original waveform
+figure;
+subplot(3,1,1);
+plot(t, audioSignal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Time Domain Representation of the Audio Signal');
+grid on;
+
+%% Short-Time Energy (STE) Calculation
+frameSize = 0.02 * fs; % 20ms frame
+frameOverlap = 0.01 * fs; % 10ms overlap
+
+numFrames = floor((length(audioSignal) - frameOverlap) / (frameSize - frameOverlap));
+STE = zeros(1, numFrames);
+
+for i = 1:numFrames
+    startIdx = (i-1) * (frameSize - frameOverlap) + 1;
+    endIdx = min(startIdx + frameSize - 1, length(audioSignal));
+    frame = audioSignal(startIdx:endIdx);
+    STE(i) = sum(frame.^2); % Compute short-time energy
+end
+
+% Time axis for STE
+steTime = linspace(0, max(t), numFrames);
+
+% Plot Short-Time Energy
+subplot(3,1,2);
+plot(steTime, STE, 'r');
+xlabel('Time (seconds)');
+ylabel('Energy');
+title('Short-Time Energy (STE)');
+grid on;
+
+%% Short-Time Fourier Transform (STFT)
+windowSize = 256; % Define window size
+overlap = 128;    % Define overlap samples
+nfft = 512;       % Number of FFT points
+
+figure;
+spectrogram(audioSignal, windowSize, overlap, nfft, fs, 'yaxis');
+title('Spectrogram of the Audio Signal');
+
+%% Feature Extraction: Zero Crossing Rate (ZCR)
+ZCR = zeros(1, numFrames);
+for i = 1:numFrames
+    startIdx = (i-1) * (frameSize - frameOverlap) + 1;
+    endIdx = min(startIdx + frameSize - 1, length(audioSignal));
+    frame = audioSignal(startIdx:endIdx);
+    ZCR(i) = sum(abs(diff(sign(frame)))) / (2 * length(frame)); % Compute ZCR
+end
+
+% Plot Zero Crossing Rate
+figure;
+plot(steTime, ZCR, 'b');
+xlabel('Time (seconds)');
+ylabel('Zero Crossing Rate');
+title('Zero Crossing Rate (ZCR)');
+grid on;
+disp('Short-Time Analysis Completed.');
+
+
+
+
+
+
+
+
+
+
+
+Lab Experiment 4 Frequency domain analysis of audio and speech Signals
+ 
+ 
+clear; clc; close all;
+
+%% Load the Audio Signal
+[audioSignal, fs] = audioread('Conference.wav'); % Replace with your file
+audioSignal = audioSignal(:, 1); % Use only the first channel if stereo
+
+% Time vector
+t = (0:length(audioSignal)-1) / fs;
+
+%% Plot Time-Domain Representation
+figure;
+subplot(2,1,1);
+plot(t, audioSignal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Time-Domain Representation of the Audio Signal');
+grid on;
+
+%% Compute and Plot Fourier Transform (FFT)
+n = length(audioSignal);
+f = (0:n-1)*(fs/n); % Frequency axis
+Y = fft(audioSignal); % Compute FFT
+
+% Plot single-sided amplitude spectrum
+subplot(2,1,2);
+plot(f(1:n/2), abs(Y(1:n/2))); 
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Frequency Spectrum of the Audio Signal (FFT)');
+grid on;
+
+%% Power Spectral Density (PSD) Analysis
+[pxx, f_psd] = pwelch(audioSignal, hamming(1024), 512, 1024, fs);
+
+figure;
+plot(f_psd, 10*log10(pxx));
+xlabel('Frequency (Hz)');
+ylabel('Power/Frequency (dB/Hz)');
+title('Power Spectral Density (PSD)');
+grid on;
+
+%% Spectrogram Visualization
+windowSize = 512; % Define window size
+overlap = 256;    % Define overlap samples
+nfft = 1024;      % Number of FFT points
+
+figure;
+spectrogram(audioSignal, windowSize, overlap, nfft, fs, 'yaxis');
+title('Spectrogram of the Audio Signal');
+
+%% Feature Extraction: Mel-Frequency Cepstral Coefficients (MFCC)
+coeffs = mfcc(audioSignal, fs, 'NumCoeffs', 13); % Compute 13 MFCCs
+
+figure;
+imagesc(coeffs');
+colorbar;
+xlabel('Frame Index');
+ylabel('MFCC Coefficients');
+title('MFCC Feature Extraction');
+set(gca, 'YDir', 'normal'); % Ensure correct orientation
+
+
+
+EXPERIMENT 5: Linear Predictive Analysis of Speech
+
+
+
+
+clc;
+clear;
+close all;
+
+%% Load Speech Signal
+[speech, fs] = audioread('speech.wav');
+
+%% Pre-emphasis
+speech_emph = filter([1 -0.97], 1, speech);
+
+%% Frame Selection
+frame_length = round(0.025 * fs);
+frame = speech_emph(1:frame_length) .* hamming(frame_length);
+
+%% LPC Computation
+p = 12;
+a = lpc(frame, p);
+
+%% Frequency Response
+[H, w] = freqz(1, a, 512, fs);
+plot(w, 20*log10(abs(H)));
+xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)');
+title('LPC Spectrum');
+grid on;
+
+
+
+
+EXPERIMENT 6: Pitch Estimation
+
+
+
+clc;
+ clear; 
+close all;
+%% Load Speech Signal
+[speech, fs] = audioread('speech.wav');
+speech = speech(:,1); % Use mono channel if stereo
+
+%% Select a Frame (25 ms)
+frame_size = round(0.025 * fs);
+frame = speech(1:frame_size) .* hamming(frame_size);
+
+%% Compute Autocorrelation
+autocorr_values = xcorr(frame);
+autocorr_half = autocorr_values(length(frame):end);
+
+%% Find Pitch Period
+[~, locs] = findpeaks(autocorr_half, 'MinPeakDistance', fs/500);
+pitch_period = locs(1);
+pitch_freq = fs / pitch_period;
+
+%% Display Result
+fprintf('Estimated Pitch: %.2f Hz\n', pitch_freq);
+
+%% Plot Autocorrelation
+plot(autocorr_half); title('Autocorrelation'); grid on;
+
+
+
+
+EXPERIMENT 7: Formant Estimation
+
+clc; clear; close all;
+
+%% Step 1: Load Speech Signal
+[y, fs] = audioread('Jingle.wav'); % Load speech file
+y = y / max(abs(y)); % Normalize amplitude
+
+%% Step 2: Preprocess Speech Signal
+y = y - mean(y); % Remove DC offset
+y = filter([1 -0.97], 1, y); % Pre-emphasis filter
+
+% Voice Activity Detection (VAD) - Simple Energy-Based Silence Removal
+threshold = 0.02; % Adjust based on noise level
+y_active = y(abs(y) > threshold); % Remove silent segments
+
+%% Step 3: LPC Analysis - Estimate Vocal Tract Filter Coefficients
+frame_length = round(0.025 * fs); % 25 ms frame
+frame = y_active(1:min(frame_length, length(y_active))) .* hamming(frame_length); % Apply window
+p = 12; % LPC order
+a = lpc(frame, p); % Compute LPC coefficients
+
+%% Step 4: Compute Frequency Response & Identify Formants
+[H, w] = freqz(1, a, 512, fs); % Compute vocal tract frequency response
+
+figure;
+plot(w, 20*log10(abs(H)), 'b', 'LineWidth', 1.5);
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+title('Estimated Vocal Tract Frequency Response');
+grid on;
+
+% Find Formants (Peaks in LPC Spectrum)
+roots_a = roots(a); % Find LPC polynomial roots
+formants = sort(angle(roots_a(imag(roots_a) > 0)) * (fs / (2 * pi))); % Convert to Hz
+
+disp('Estimated Formant Frequencies (Hz):');
+disp(formants(1:3)); % Display first three formants
+
+
+
+
+EXPERIMENT 8:  Enhancement of Audio and Speech Signals
+
+clc; clear; close all;
+
+%% Load Speech Signal
+[audio, fs] = audioread('Jingle.wav');  % Load speech file
+
+%% Add White Noise
+noise_white = 0.02 * randn(size(audio));  
+audio_noisy_white = audio + noise_white;
+
+%% Add Background Noise (Simulated Low-Frequency Noise)
+t = (0:length(audio)-1) / fs;
+background_noise = 0.01 * sin(2 * pi * 50 * t(:));  
+audio_noisy_bg = audio + background_noise;
+
+%% Noise Reduction using Spectral Subtraction
+N = length(audio);
+Y = fft(audio_noisy_white);
+N_est = fft(noise_white);  % Estimate noise spectrum
+Y_denoised = Y - N_est;  
+audio_denoised_ss = real(ifft(Y_denoised));  % Inverse FFT to recover signal
+
+%% Noise Reduction using Wiener Filtering
+clean_signal = wiener2(audio_noisy_white, [5 5]);  % Wiener filter for speech enhancement
+
+%% Plot Original, Noisy, and Enhanced Signals
+figure;
+subplot(4,1,1); plot(audio); title('Original Speech Signal'); xlabel('Samples'); ylabel('Amplitude');
+subplot(4,1,2); plot(audio_noisy_white); title('White Noise Added'); xlabel('Samples'); ylabel('Amplitude');
+subplot(4,1,3); plot(audio_denoised_ss); title('Denoised Speech (Spectral Subtraction)'); xlabel('Samples'); ylabel('Amplitude');
+subplot(4,1,4); plot(clean_signal); title('Enhanced Speech (Wiener Filter)'); xlabel('Samples'); ylabel('Amplitude');
+
+
+
+
+
+
+
