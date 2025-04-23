@@ -1,0 +1,67 @@
+
+Lab Experiment 4 Frequency domain analysis of audio and speech Signals
+ 
+ 
+clear; clc; close all;
+
+%% Load the Audio Signal
+[audioSignal, fs] = audioread('Conference.wav'); % Replace with your file
+audioSignal = audioSignal(:, 1); % Use only the first channel if stereo
+
+% Time vector
+t = (0:length(audioSignal)-1) / fs;
+
+%% Plot Time-Domain Representation
+figure;
+subplot(2,1,1);
+plot(t, audioSignal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Time-Domain Representation of the Audio Signal');
+grid on;
+
+%% Compute and Plot Fourier Transform (FFT)
+n = length(audioSignal);
+f = (0:n-1)*(fs/n); % Frequency axis
+Y = fft(audioSignal); % Compute FFT
+
+% Plot single-sided amplitude spectrum
+subplot(2,1,2);
+plot(f(1:n/2), abs(Y(1:n/2))); 
+xlabel('Frequency (Hz)');
+ylabel('Magnitude');
+title('Frequency Spectrum of the Audio Signal (FFT)');
+grid on;
+
+%% Power Spectral Density (PSD) Analysis
+[pxx, f_psd] = pwelch(audioSignal, hamming(1024), 512, 1024, fs);
+
+figure;
+plot(f_psd, 10*log10(pxx));
+xlabel('Frequency (Hz)');
+ylabel('Power/Frequency (dB/Hz)');
+title('Power Spectral Density (PSD)');
+grid on;
+
+%% Spectrogram Visualization
+windowSize = 512; % Define window size
+overlap = 256;    % Define overlap samples
+nfft = 1024;      % Number of FFT points
+
+figure;
+spectrogram(audioSignal, windowSize, overlap, nfft, fs, 'yaxis');
+title('Spectrogram of the Audio Signal');
+
+%% Feature Extraction: Mel-Frequency Cepstral Coefficients (MFCC)
+coeffs = mfcc(audioSignal, fs, 'NumCoeffs', 13); % Compute 13 MFCCs
+
+figure;
+imagesc(coeffs');
+colorbar;
+xlabel('Frame Index');
+ylabel('MFCC Coefficients');
+title('MFCC Feature Extraction');
+set(gca, 'YDir', 'normal'); % Ensure correct orientation
+
+
+
