@@ -1,0 +1,26 @@
+EXPERIMENT 5: Linear Predictive Analysis of Speech
+
+clc;
+clear;
+close all;
+
+%% Load Speech Signal
+[speech, fs] = audioread('speech.wav');
+
+%% Pre-emphasis
+speech_emph = filter([1 -0.97], 1, speech);
+
+%% Frame Selection
+frame_length = round(0.025 * fs);
+frame = speech_emph(1:frame_length) .* hamming(frame_length);
+
+%% LPC Computation
+p = 12;
+a = lpc(frame, p);
+
+%% Frequency Response
+[H, w] = freqz(1, a, 512, fs);
+plot(w, 20*log10(abs(H)));
+xlabel('Frequency (Hz)'); ylabel('Magnitude (dB)');
+title('LPC Spectrum');
+grid on;
