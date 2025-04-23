@@ -1,0 +1,27 @@
+EXPERIMENT 6: Pitch Estimation
+
+clc;
+ clear; 
+close all;
+%% Load Speech Signal
+[speech, fs] = audioread('speech.wav');
+speech = speech(:,1); % Use mono channel if stereo
+
+%% Select a Frame (25 ms)
+frame_size = round(0.025 * fs);
+frame = speech(1:frame_size) .* hamming(frame_size);
+
+%% Compute Autocorrelation
+autocorr_values = xcorr(frame);
+autocorr_half = autocorr_values(length(frame):end);
+
+%% Find Pitch Period
+[~, locs] = findpeaks(autocorr_half, 'MinPeakDistance', fs/500);
+pitch_period = locs(1);
+pitch_freq = fs / pitch_period;
+
+%% Display Result
+fprintf('Estimated Pitch: %.2f Hz\n', pitch_freq);
+
+%% Plot Autocorrelation
+plot(autocorr_half); title('Autocorrelation'); grid on;
