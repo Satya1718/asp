@@ -1,0 +1,89 @@
+EXPERIMENT 2: Identification of voiced speech, unvoiced speech, silence
+Name:
+Roll No:
+In this experiment, ZCR technique is used for identifying voice, unvoiced and silence areas
+**Select an audio/speech file of your choice which has zones of voice and silences in between
+[x, fs] = audioread('……...wav');
+%The code segment in green is for setting parameters
+frame_size = 20; % Frame size in milliseconds
+overlap = 15; % Overlap in milliseconds
+threshold = 0.005; % ZCR threshold for classification
+% The code segment in blue is for converting parameters to samples
+frame_size_samples = round(frame_size * fs / 1000);
+overlap_samples = round(overlap * fs / 1000);
+% The line in orange calculates ZCR for each frame
+zcr = zerocrossings(x, frame_size_samples, overlap_samples);
+% Steps in green to Classify frames into voiced, unvoiced, or silence based on the threshold
+voiced_frames = zcr > threshold;
+unvoiced_frames = zcr <= threshold & zcr > 0;
+silence_frames = zcr == 0;
+% Display results below
+disp('Number of Voiced Frames:');
+disp(sum(voiced_frames));
+disp('Number of Unvoiced Frames:');
+disp(sum(unvoiced_frames));
+disp('Number of Silence Frames:');
+disp(sum(silence_frames));
+% For formatting the Plots the audio signal with highlighted regions appropriately
+t = (0:length(x)-1) / fs;
+figure;
+subplot(3,1,1);
+plot(t, x);
+title('Audio Signal');
+xlabel('Time (s)');
+ylabel('Amplitude');
+subplot(3,1,2);
+hold on;
+plot(t(voiced_frames), zcr(voiced_frames), 'go', 'MarkerSize', 5);
+plot(t(unvoiced_frames), zcr(unvoiced_frames), 'ro', 'MarkerSize', 5);
+plot(t(silence_frames), zcr(silence_frames), 'bo', 'MarkerSize', 5);
+hold off;
+title('Zero Crossing Rate with Classification');
+xlabel('Time (s)');
+ylabel('ZCR');
+legend('ZCR', 'Voiced', 'Unvoiced', 'Silence');
+subplot(3,1,3);
+plot(t, x);
+hold on;
+plot(t(voiced_frames), x(voiced_frames), 'go', 'MarkerSize', 5);
+plot(t(unvoiced_frames), x(unvoiced_frames), 'ro', 'MarkerSize', 5);
+plot(t(silence_frames), x(silence_frames), 'bo', 'MarkerSize', 5);
+hold off;
+title('Voiced, Unvoiced, and Silence Regions');
+xlabel('Time (s)');
+ylabel('Amplitude');
+legend('Audio Signal', 'Voiced', 'Unvoiced','Silence');
+% Separate the audio signal into voiced, unvoiced, and silence regions
+voiced_signal = x(voiced_frames);
+unvoiced_signal = x(unvoiced_frames);
+silence_signal = x(silence_frames);
+% Plot individual regions
+figure;
+subplot(3,1,1);
+plot(t(voiced_frames), voiced_signal, 'go', 'MarkerSize', 5);
+title('Voiced Region');
+xlabel('Time (s)');
+ylabel('Amplitude');
+subplot(3,1,2);
+plot(t(unvoiced_frames), unvoiced_signal, 'ro', 'MarkerSize', 5);
+title('Unvoiced Region');
+xlabel('Time (s)');
+ylabel('Amplitude');
+subplot(3,1,3);
+plot(t(silence_frames), silence_signal, 'bo', 'MarkerSize', 5);
+title('Silence Region');
+xlabel('Time (s)');
+ylabel('Amplitude');
+% Function definition to calculate Zero Crossing Rate for each frame
+function zcr = zerocrossings(x, frame_size, overlap)
+num_frames = floor((length(x) - overlap) / (frame_size - overlap));
+zcr = zeros(1, num_frames);
+for i = 1:num_frames
+start_idx = (i - 1) * (frame_size - overlap) + 1;
+end_idx = start_idx + frame_size - 1;
+frame = x(start_idx:end_idx);
+% Calculate Zero Crossing Rate
+zcr(i) = sum(abs(diff(sign(frame)))) / (2 * frame_size);
+end
+end
+**Paste all relevant figures generated at the appropriate segments of code
