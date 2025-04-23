@@ -1,0 +1,39 @@
+EXPERIMENT 7: Formant Estimation
+
+clc; clear; close all;
+
+%% Step 1: Load Speech Signal
+[y, fs] = audioread('Jingle.wav'); % Load speech file
+y = y / max(abs(y)); % Normalize amplitude
+
+%% Step 2: Preprocess Speech Signal
+y = y - mean(y); % Remove DC offset
+y = filter([1 -0.97], 1, y); % Pre-emphasis filter
+
+% Voice Activity Detection (VAD) - Simple Energy-Based Silence Removal
+threshold = 0.02; % Adjust based on noise level
+y_active = y(abs(y) > threshold); % Remove silent segments
+
+%% Step 3: LPC Analysis - Estimate Vocal Tract Filter Coefficients
+frame_length = round(0.025 * fs); % 25 ms frame
+frame = y_active(1:min(frame_length, length(y_active))) .* hamming(frame_length); % Apply window
+p = 12; % LPC order
+a = lpc(frame, p); % Compute LPC coefficients
+
+%% Step 4: Compute Frequency Response & Identify Formants
+[H, w] = freqz(1, a, 512, fs); % Compute vocal tract frequency response
+
+figure;
+plot(w, 20*log10(abs(H)), 'b', 'LineWidth', 1.5);
+xlabel('Frequency (Hz)');
+ylabel('Magnitude (dB)');
+title('Estimated Vocal Tract Frequency Response');
+grid on;
+
+% Find Formants (Peaks in LPC Spectrum)
+roots_a = roots(a); % Find LPC polynomial roots
+formants = sort(angle(roots_a(imag(roots_a) > 0)) * (fs / (2 * pi))); % Convert to Hz
+
+disp('Estimated Formant Frequencies (Hz):');
+disp(formants(1:3)); % Display first three formants
+
