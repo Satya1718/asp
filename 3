@@ -1,0 +1,73 @@
+
+Lab Experiment 3 Short time domain analysis of audio and speech Signals
+clear; clc; close all;
+
+% Load the audio signal
+[audioSignal, fs] = audioread('Conference.wav'); % Replace with your audio file
+audioSignal = audioSignal(:, 1); % Use the first channel if stereo
+
+% Time vector for plotting
+t = (0:length(audioSignal)-1) / fs;
+
+% Plot the original waveform
+figure;
+subplot(3,1,1);
+plot(t, audioSignal);
+xlabel('Time (seconds)');
+ylabel('Amplitude');
+title('Time Domain Representation of the Audio Signal');
+grid on;
+
+%% Short-Time Energy (STE) Calculation
+frameSize = 0.02 * fs; % 20ms frame
+frameOverlap = 0.01 * fs; % 10ms overlap
+
+numFrames = floor((length(audioSignal) - frameOverlap) / (frameSize - frameOverlap));
+STE = zeros(1, numFrames);
+
+for i = 1:numFrames
+    startIdx = (i-1) * (frameSize - frameOverlap) + 1;
+    endIdx = min(startIdx + frameSize - 1, length(audioSignal));
+    frame = audioSignal(startIdx:endIdx);
+    STE(i) = sum(frame.^2); % Compute short-time energy
+end
+
+% Time axis for STE
+steTime = linspace(0, max(t), numFrames);
+
+% Plot Short-Time Energy
+subplot(3,1,2);
+plot(steTime, STE, 'r');
+xlabel('Time (seconds)');
+ylabel('Energy');
+title('Short-Time Energy (STE)');
+grid on;
+
+%% Short-Time Fourier Transform (STFT)
+windowSize = 256; % Define window size
+overlap = 128;    % Define overlap samples
+nfft = 512;       % Number of FFT points
+
+figure;
+spectrogram(audioSignal, windowSize, overlap, nfft, fs, 'yaxis');
+title('Spectrogram of the Audio Signal');
+
+%% Feature Extraction: Zero Crossing Rate (ZCR)
+ZCR = zeros(1, numFrames);
+for i = 1:numFrames
+    startIdx = (i-1) * (frameSize - frameOverlap) + 1;
+    endIdx = min(startIdx + frameSize - 1, length(audioSignal));
+    frame = audioSignal(startIdx:endIdx);
+    ZCR(i) = sum(abs(diff(sign(frame)))) / (2 * length(frame)); % Compute ZCR
+end
+
+% Plot Zero Crossing Rate
+figure;
+plot(steTime, ZCR, 'b');
+xlabel('Time (seconds)');
+ylabel('Zero Crossing Rate');
+title('Zero Crossing Rate (ZCR)');
+grid on;
+disp('Short-Time Analysis Completed.');
+
+
